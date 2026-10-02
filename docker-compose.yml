@@ -1,0 +1,21 @@
+# Production-path reference. The vertical slice built in this session runs on
+# SQLite locally (no Docker required) — see README for why. To move to Postgres:
+#   1. docker compose up -d db
+#   2. edit apps/api/prisma/schema.prisma: provider = "postgresql"
+#   3. set DATABASE_URL in apps/api/.env to the `db` service URL below
+#   4. npx prisma migrate dev --name init (from apps/api)
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reactcode
+      POSTGRES_PASSWORD: reactcode
+      POSTGRES_DB: reactcode
+    ports:
+      - "5432:5432"
+    volumes:
+      - reactcode_db_data:/var/lib/postgresql/data
+
+volumes:
+  reactcode_db_data:

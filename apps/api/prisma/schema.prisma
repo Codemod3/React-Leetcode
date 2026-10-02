@@ -1,0 +1,122 @@
+// Dev datasource is SQLite (no Docker/Postgres available in this environment).
+// To move to production Postgres: change provider to "postgresql", point
+// DATABASE_URL at a real instance, and run `prisma migrate dev` again —
+// nothing else in this schema or the application code needs to change.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         String   @default("USER") // USER | ADMIN
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  submissions Submission[]
+  progress    UserProblemProgress[]
+}
+
+model Problem {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  title         String
+  description   String
+  difficulty    String // BEGINNER | EASY | MEDIUM | HARD
+  category      String
+  level         Int      @default(1)
+  tags          String // JSON-encoded string[]
+  type          String // ProblemType
+  problemType   String   @default("BUILD") // BUILD | DEBUG | REFACTOR | IMPLEMENT | OPTIMIZE | TEST
+  environment   String // JSON-encoded ProblemEnvironment
+  mockApi       String? // JSON-encoded MockRoute[] | null
+  requirements  String // JSON-encoded string[]
+  hints         String // JSON-encoded string[]
+  prerequisites String   @default("[]") // JSON-encoded category names
+  collections   String   @default("[]") // JSON-encoded collection slugs
+  order         Int      @default(0)
+  estimatedMinutes Int?
+  starterCode   String
+  solutionCode  String
+  explanation   String
+  commonMistakes String  @default("[]") // JSON-encoded string[]
+  alternativeApproach String?
+  version       Int      @default(1)
+  contentHash   String   @default("") // hash of starter code + tests; drafts saved against another hash are stale
+  wrongSolutions String  @default("[]") // JSON string[]; verification only, never sent to learners
+  source        String   @default("bank") // "bank" (src/problem-bank, managed by the seed) | "admin" (authored in the admin UI)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  testCases   TestCase[]
+  submissions Submission[]
+  progress    UserProblemProgress[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([order])
+}
+
+model TestCase {
+  id             String  @id @default(uuid())
+  problemId      String
+  name           String
+  type           String // DOM | INTERACTION | STATE | API | PROPS
+  spec           String // JSON-encoded test spec consumed by the test-harness generator
+  isHidden       Boolean @default(false)
+  order          Int     @default(0)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+}
+
+model Submission {
+  id               String   @id @default(uuid())
+  userId           String
+  problemId        String
+  code             String
+  language         String   @default("tsx")
+  status           String // PASSED | FAILED | COMPILE_ERROR | RUNTIME_ERROR | TIMEOUT
+  mode             String   @default("SUBMIT") // RUN | SUBMIT
+  executionTimeMs  Int?
+  testCasesPassed  Int      @default(0)
+  totalTestCases   Int      @default(0)
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([problemId])
+}
+
+model UserProblemProgress {
+  id                 String    @id @default(uuid())
+  userId             String
+  problemId          String
+  status             String    @default("NOT_STARTED") // NOT_STARTED | ATTEMPTED | SOLVED
+  attempts           Int       @default(0)
+  bestExecutionTimeMs Int?
+  savedCode          String?
+  savedCodeHash      String? // Problem.contentHash at the time the draft was saved
+  bookmarked         Boolean   @default(false)
+  notes              String?
+  lastSubmittedAt    DateTime?
+  completedAt        DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+}
