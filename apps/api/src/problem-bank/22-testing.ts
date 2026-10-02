@@ -5,8 +5,9 @@ import { hidden, test, type CategoryBank } from "./types.js";
  * test function. It must pass against the correct implementation and fail against each mutant.
  * `impls` is JS source defining the components (Correct + mutants) inside the test code.
  */
-const HARNESS = `const kit = (C) => ({ Component: C, render, screen, fireEvent, userEvent, waitFor, within, expect, fn });
+const HARNESS = `const kit = (C) => ({ Component: C, render, screen, fireEvent, userEvent, waitFor, within, expect, fn, renderHook, act, mockApi });
 async function runLearnerTest(C) {
+  mockApi.reset(); // a learner test may change routes; never leak that into the next run
   try {
     await Component(kit(C));
     return null;
@@ -17,10 +18,10 @@ async function runLearnerTest(C) {
   }
 }`;
 
-const passesCorrect = (impls: string) =>
+export const passesCorrect = (impls: string) =>
   `${impls}\n${HARNESS}\nconst err = await runLearnerTest(Correct);\nassert(!err, "Your test failed against a correct implementation: " + (err && err.message));`;
 
-const catchesMutants = (impls: string, mutants: [string, string][]) =>
+export const catchesMutants = (impls: string, mutants: [string, string][]) =>
   `${impls}\n${HARNESS}\n` +
   mutants
     .map(
@@ -29,10 +30,10 @@ const catchesMutants = (impls: string, mutants: [string, string][]) =>
     )
     .join("\n");
 
-const NOTE =
+export const NOTE =
   "\n\nYour default export is a test. It receives `{ Component, render, screen, fireEvent, userEvent, waitFor, within, expect, fn }` — `expect` is Jest's, with jest-dom matchers like `toBeInTheDocument()` and `toHaveTextContent()`. Render and test the **`Component` you're given**: the grader runs your test against a correct version and against several subtly broken ones, and your test must pass the first and fail the rest.";
 
-const starter = (reference: string, signature: string) =>
+export const testStarter = (reference: string, signature: string) =>
   `// The component under test, for reference (the grader passes in its own copies):\n${reference
     .trim()
     .split("\n")
@@ -62,7 +63,7 @@ export const testing: CategoryBank = {
         "expect(screen.getByRole(\"heading\")).toHaveTextContent(\"Hello, Ada!\");",
         "Pick a name that a hardcoded component wouldn't happen to use.",
       ],
-      starterCode: starter(GREETING, "testGreeting({ Component, render, screen, expect })"),
+      starterCode: testStarter(GREETING, "testGreeting({ Component, render, screen, expect })"),
       solutionCode: `export default async function testGreeting({ Component, render, screen, expect }) {\n  render(<Component name="Ada" />);\n  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Hello, Ada!");\n}\n`,
       explanation: "A good rendering test checks the output a user would see, for an input chosen so a broken implementation can't pass by accident.",
       tests: (() => {
@@ -83,7 +84,7 @@ export const testing: CategoryBank = {
       description: "Write a test for `Counter`: it shows `Count: 0` and a `+` button; each click adds 1." + NOTE,
       requirements: ["Checks the initial value", "Checks the value after clicking (more than once is a good idea)"],
       hints: ["fireEvent.click(screen.getByRole(\"button\", { name: \"+\" }))", "Click twice: a version that adds 2 would pass a single-click test that only checks 'not 0'.", "expect(screen.getByText(\"Count: 2\")).toBeInTheDocument();"],
-      starterCode: starter(COUNTER.replace("React.useState", "useState"), "testCounter({ Component, render, screen, fireEvent, expect })"),
+      starterCode: testStarter(COUNTER.replace("React.useState", "useState"), "testCounter({ Component, render, screen, fireEvent, expect })"),
       solutionCode: `export default async function testCounter({ Component, render, screen, fireEvent, expect }) {\n  render(<Component />);\n  expect(screen.getByText("Count: 0")).toBeInTheDocument();\n  const plus = screen.getByRole("button", { name: "+" });\n  fireEvent.click(plus);\n  fireEvent.click(plus);\n  expect(screen.getByText("Count: 2")).toBeInTheDocument();\n}\n`,
       explanation: "Interaction tests drive the component the way a user would (find the button by its role and name, click it) and then check what's visible.",
       tests: (() => {
@@ -104,7 +105,7 @@ export const testing: CategoryBank = {
       description: "Write a test for `Echo`: it has an input labelled `Message` and shows `You typed: {text}` below it, exactly as typed." + NOTE,
       requirements: ["Finds the input by its label", "Types with userEvent", "Checks the echoed text exactly"],
       hints: ["await userEvent.type(screen.getByLabelText(\"Message\"), \"Hi there\");", "Use text with mixed case so an upper-casing bug would show up."],
-      starterCode: starter(`function Echo() {\n  const [text, setText] = useState("");\n  return (\n    <div>\n      <label>Message <input value={text} onChange={(e) => setText(e.target.value)} /></label>\n      <p>You typed: {text}</p>\n    </div>\n  );\n}`, "testEcho({ Component, render, screen, userEvent, expect })"),
+      starterCode: testStarter(`function Echo() {\n  const [text, setText] = useState("");\n  return (\n    <div>\n      <label>Message <input value={text} onChange={(e) => setText(e.target.value)} /></label>\n      <p>You typed: {text}</p>\n    </div>\n  );\n}`, "testEcho({ Component, render, screen, userEvent, expect })"),
       solutionCode: `export default async function testEcho({ Component, render, screen, userEvent, expect }) {\n  render(<Component />);\n  await userEvent.type(screen.getByLabelText("Message"), "Hi there");\n  expect(screen.getByText("You typed: Hi there")).toBeInTheDocument();\n}\n`,
       explanation: "userEvent simulates real typing (keydown, input, keyup per character), which is closer to what users do than setting a value directly.",
       tests: (() => {
@@ -126,7 +127,7 @@ export const testing: CategoryBank = {
         "Write a test for `SubscribeForm({ onSubscribe })`: it has an input labelled `Email` and a submit button `Subscribe`; submitting calls `onSubscribe(email)` **exactly once**.\n\nUse `fn()` to create a mock function and pass it as the prop." + NOTE,
       requirements: ["Uses a mock function", "Checks the argument", "Checks it's called exactly once"],
       hints: ["const onSubscribe = fn(); render(<Component onSubscribe={onSubscribe} />);", "expect(onSubscribe).toHaveBeenCalledTimes(1); expect(onSubscribe).toHaveBeenCalledWith(\"a@b.co\");"],
-      starterCode: starter(`function SubscribeForm({ onSubscribe }) {\n  const [email, setEmail] = useState("");\n  return (\n    <form onSubmit={(e) => { e.preventDefault(); onSubscribe(email); }}>\n      <label>Email <input value={email} onChange={(e) => setEmail(e.target.value)} /></label>\n      <button type="submit">Subscribe</button>\n    </form>\n  );\n}`, "testSubscribe({ Component, render, screen, userEvent, expect, fn })"),
+      starterCode: testStarter(`function SubscribeForm({ onSubscribe }) {\n  const [email, setEmail] = useState("");\n  return (\n    <form onSubmit={(e) => { e.preventDefault(); onSubscribe(email); }}>\n      <label>Email <input value={email} onChange={(e) => setEmail(e.target.value)} /></label>\n      <button type="submit">Subscribe</button>\n    </form>\n  );\n}`, "testSubscribe({ Component, render, screen, userEvent, expect, fn })"),
       solutionCode: `export default async function testSubscribe({ Component, render, screen, userEvent, expect, fn }) {\n  const onSubscribe = fn();\n  render(<Component onSubscribe={onSubscribe} />);\n  await userEvent.type(screen.getByLabelText("Email"), "a@b.co");\n  await userEvent.click(screen.getByRole("button", { name: "Subscribe" }));\n  expect(onSubscribe).toHaveBeenCalledTimes(1);\n  expect(onSubscribe).toHaveBeenCalledWith("a@b.co");\n}\n`,
       explanation: "Mock functions record how they were called, so you can test a component's outputs (callbacks) as precisely as its rendered UI.",
       tests: (() => {
@@ -149,7 +150,7 @@ export const testing: CategoryBank = {
         "Write a test for `Disclosure`: a button `Show details` reveals `<p>Secret details</p>` and changes to `Hide details`; clicking again hides the text.\n\nCheck absence with `queryBy...` (it returns `null` instead of throwing)." + NOTE,
       requirements: ["Checks it's hidden first", "Checks it appears", "Checks it hides again"],
       hints: ["expect(screen.queryByText(\"Secret details\")).not.toBeInTheDocument();", "Test the full cycle: hidden → shown → hidden."],
-      starterCode: starter(`function Disclosure() {\n  const [open, setOpen] = useState(false);\n  return (\n    <div>\n      <button onClick={() => setOpen(!open)}>{open ? "Hide details" : "Show details"}</button>\n      {open && <p>Secret details</p>}\n    </div>\n  );\n}`, "testDisclosure({ Component, render, screen, fireEvent, expect })"),
+      starterCode: testStarter(`function Disclosure() {\n  const [open, setOpen] = useState(false);\n  return (\n    <div>\n      <button onClick={() => setOpen(!open)}>{open ? "Hide details" : "Show details"}</button>\n      {open && <p>Secret details</p>}\n    </div>\n  );\n}`, "testDisclosure({ Component, render, screen, fireEvent, expect })"),
       solutionCode: `export default async function testDisclosure({ Component, render, screen, fireEvent, expect }) {\n  render(<Component />);\n  expect(screen.queryByText("Secret details")).not.toBeInTheDocument();\n  fireEvent.click(screen.getByRole("button", { name: "Show details" }));\n  expect(screen.getByText("Secret details")).toBeInTheDocument();\n  fireEvent.click(screen.getByRole("button", { name: "Hide details" }));\n  expect(screen.queryByText("Secret details")).not.toBeInTheDocument();\n}\n`,
       explanation: "getBy* throws when nothing matches, which is right for 'this must exist'. queryBy* returns null, which is right for 'this must not exist'.",
       tests: (() => {
@@ -172,7 +173,7 @@ export const testing: CategoryBank = {
         "Write a test for `UserList`, which fetches `GET /api/users` (mocked to return `Alice` and `Bob`), shows `Loading...` while waiting, then lists the names and removes the loading text.\n\nUse `await screen.findByText(...)` (or `waitFor`) to wait for the data." + NOTE,
       requirements: ["Checks the loading state", "Waits for the data", "Checks loading disappears"],
       hints: ["expect(screen.getByText(\"Loading...\")).toBeInTheDocument();", "expect(await screen.findByText(\"Bob\")).toBeInTheDocument();", "Then: expect(screen.queryByText(\"Loading...\")).not.toBeInTheDocument();"],
-      starterCode: starter(`function UserList() {\n  const [users, setUsers] = useState(null);\n  useEffect(() => { fetch("/api/users").then((r) => r.json()).then(setUsers); }, []);\n  if (!users) return <p>Loading...</p>;\n  return <ul>{users.map((u) => <li key={u.id}>{u.name}</li>)}</ul>;\n}`, "testUserList({ Component, render, screen, expect })"),
+      starterCode: testStarter(`function UserList() {\n  const [users, setUsers] = useState(null);\n  useEffect(() => { fetch("/api/users").then((r) => r.json()).then(setUsers); }, []);\n  if (!users) return <p>Loading...</p>;\n  return <ul>{users.map((u) => <li key={u.id}>{u.name}</li>)}</ul>;\n}`, "testUserList({ Component, render, screen, expect })"),
       solutionCode: `export default async function testUserList({ Component, render, screen, expect }) {\n  render(<Component />);\n  expect(screen.getByText("Loading...")).toBeInTheDocument();\n  expect(await screen.findByText("Alice")).toBeInTheDocument();\n  expect(screen.getByText("Bob")).toBeInTheDocument();\n  expect(screen.queryByText("Loading...")).not.toBeInTheDocument();\n}\n`,
       explanation: "findBy* queries retry until the element appears (or time out), which is how tests wait for async UI without arbitrary sleeps.",
       mockApi: [{ url: "/api/users", delayMs: 20, response: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }] }],
@@ -195,7 +196,7 @@ export const testing: CategoryBank = {
         "Write a test for `LoginForm({ onLogin })`: inputs labelled `Email` and `Password`, and a `Log in` button that calls `onLogin({ email, password })`.\n\nQuery the way assistive technology does — `getByLabelText` and `getByRole` — so the test fails if the labels aren't connected or the button isn't a real button." + NOTE,
       requirements: ["Finds fields by label and the button by role", "Checks onLogin's argument"],
       hints: ["getByPlaceholderText or getByText would pass for inaccessible markup — avoid them here.", "expect(onLogin).toHaveBeenCalledWith({ email: \"a@b.co\", password: \"pw\" });"],
-      starterCode: starter(`function LoginForm({ onLogin }) {\n  const [email, setEmail] = useState("");\n  const [password, setPassword] = useState("");\n  return (\n    <form onSubmit={(e) => { e.preventDefault(); onLogin({ email, password }); }}>\n      <label htmlFor="email">Email</label>\n      <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />\n      <label htmlFor="password">Password</label>\n      <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />\n      <button type="submit">Log in</button>\n    </form>\n  );\n}`, "testLogin({ Component, render, screen, userEvent, expect, fn })"),
+      starterCode: testStarter(`function LoginForm({ onLogin }) {\n  const [email, setEmail] = useState("");\n  const [password, setPassword] = useState("");\n  return (\n    <form onSubmit={(e) => { e.preventDefault(); onLogin({ email, password }); }}>\n      <label htmlFor="email">Email</label>\n      <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />\n      <label htmlFor="password">Password</label>\n      <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />\n      <button type="submit">Log in</button>\n    </form>\n  );\n}`, "testLogin({ Component, render, screen, userEvent, expect, fn })"),
       solutionCode: `export default async function testLogin({ Component, render, screen, userEvent, expect, fn }) {\n  const onLogin = fn();\n  render(<Component onLogin={onLogin} />);\n  await userEvent.type(screen.getByLabelText("Email"), "a@b.co");\n  await userEvent.type(screen.getByLabelText("Password"), "pw");\n  await userEvent.click(screen.getByRole("button", { name: "Log in" }));\n  expect(onLogin).toHaveBeenCalledWith({ email: "a@b.co", password: "pw" });\n}\n`,
       explanation: "Role and label queries only find elements that assistive technology can find too, so the same test that checks behaviour also guards accessibility.",
       tests: (() => {

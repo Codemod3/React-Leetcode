@@ -14,7 +14,7 @@ export default function App({ initialPath = "/" }: { initialPath?: string }) {
 }
 `;
 
-const routerProblem = (imports: string, body: string) => `${imports}\n\n${body.trim()}\n\n${APP}`;
+export const routerProblem = (imports: string, body: string) => `${imports}\n\n${body.trim()}\n\n${APP}`;
 
 export const router: CategoryBank = {
   category: "React Router",

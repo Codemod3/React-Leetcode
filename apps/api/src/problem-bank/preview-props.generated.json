@@ -1,12 +1,28 @@
 {
+  "a11y-error-summary": {
+    "onSubmit": {
+      "__fn": "onSubmit"
+    }
+  },
   "a11y-icon-button": {
     "onClose": {
+      "__fn": "f"
+    }
+  },
+  "a11y-menu-button": {
+    "onSelect": {
       "__fn": "f"
     }
   },
   "a11y-modal-focus": {
     "onDelete": {
       "__fn": "onDelete"
+    }
+  },
+  "a11y-radio-group-keyboard": {
+    "value": "list",
+    "onChange": {
+      "__fn": "f"
     }
   },
   "a11y-sortable-table": {
@@ -233,6 +249,11 @@
   },
   "conditional-rendering": {
     "isLoggedIn": true
+  },
+  "context-feature-flags": {
+    "flags": {
+      "newCheckout": true
+    }
   },
   "debug-duplicate-keys": {
     "people": [
@@ -635,6 +656,9 @@
   },
   "pass-a-prop": {
     "name": "Sam"
+  },
+  "perf-reset-with-key": {
+    "noteId": 1
   },
   "perf-virtualized-list": {
     "items": [
@@ -2710,6 +2734,9 @@
     "label": "Buy",
     "color": "green"
   },
+  "reducer-auto-retry": {
+    "retryDelayMs": 20
+  },
   "ref-avoid-rerender": {
     "onReport": {
       "__fn": "f"
@@ -2735,6 +2762,12 @@
   "router-basic-routes": {
     "initialPath": "/"
   },
+  "router-breadcrumbs-from-url": {
+    "initialPath": "/shop/shoes/running-shoes"
+  },
+  "router-index-redirect": {
+    "initialPath": "/settings"
+  },
   "router-navlink-active": {
     "initialPath": "/docs/guides"
   },
@@ -2755,6 +2788,9 @@
   },
   "router-route-params": {
     "initialPath": "/users/7"
+  },
+  "router-search-url-sync": {
+    "initialPath": "/search?q=dr"
   },
   "run-on-mount": {
     "onMount": {
@@ -2810,6 +2846,11 @@
       }
     ]
   },
+  "rw-otp-input": {
+    "onComplete": {
+      "__fn": "f"
+    }
+  },
   "rw-pagination": {
     "totalItems": 45,
     "pageSize": 10,
@@ -2852,6 +2893,16 @@
       "__fn": "f"
     }
   },
+  "ts-exhaustive-switch": {
+    "status": "archived"
+  },
+  "ts-extend-native-props": {
+    "variant": "ghost",
+    "className": "wide",
+    "type": "submit",
+    "disabled": true,
+    "children": "Save"
+  },
   "ts-generic-list": {
     "items": [
       {
@@ -2868,6 +2919,32 @@
     },
     "renderItem": {
       "__fn": "renderItem"
+    }
+  },
+  "ts-generic-select": {
+    "label": "Owner",
+    "options": [
+      {
+        "id": 1,
+        "name": "Ada"
+      },
+      {
+        "id": 2,
+        "name": "Bo"
+      }
+    ],
+    "value": {
+      "id": 1,
+      "name": "Ada"
+    },
+    "onChange": {
+      "__fn": "f"
+    },
+    "getKey": {
+      "__fn": "getKey"
+    },
+    "getLabel": {
+      "__fn": "getLabel"
     }
   },
   "ts-type-props": {

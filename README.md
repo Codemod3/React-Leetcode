@@ -9,27 +9,31 @@ match.
 - The full loop, verified in a real browser: register → log in → browse/filter problems →
   edit code in Monaco → live preview → **Run** (public tests) → **Submit** (public + hidden
   tests) → per-test results → progress, bookmarks, dashboard → "Next problem".
-- **A bank of 302 problems across all 25 learning levels**, every one machine-verified (see
+- **Submission history** (`/submissions`): every submission with its result, paged, filterable
+  per problem, with the submitted code viewable inline.
+- **Admin problem authoring** (`/admin`, admin accounts only): create, edit, verify and delete
+  problems in the browser — see [Authoring in the admin UI](#authoring-in-the-admin-ui).
+- **A bank of 332 problems across all 25 learning levels**, every one machine-verified (see
   [Problem quality control](#problem-quality-control)).
 
 | Level | Category | # | Level | Category | # |
 |---|---|---|---|---|---|
 | 1 | JSX | 27 | 14 | Custom Hooks | 8 |
 | 2 | Components | 12 | 15 | Debugging | 14 |
-| 3 | Props | 20 | 16 | React Router | 9 |
-| 4 | Children | 8 | 17 | Context | 7 |
-| 5 | Conditional Rendering | 15 | 18 | useReducer | 7 |
-| 6 | Lists | 18 | 19 | Redux Toolkit | 8 |
-| 7 | Events | 17 | 20 | Zustand | 5 |
-| 8 | useState | 25 | 21 | TypeScript | 8 |
-| 9 | Forms | 17 | 22 | Testing | 7 |
-| 10 | Component Communication | 9 | 23 | Performance | 8 |
-| 11 | useEffect | 11 | 24 | Accessibility | 7 |
-| 12 | API | 17 | 25 | Real-World Components | 10 |
+| 3 | Props | 20 | 16 | React Router | 12 |
+| 4 | Children | 8 | 17 | Context | 10 |
+| 5 | Conditional Rendering | 15 | 18 | useReducer | 10 |
+| 6 | Lists | 18 | 19 | Redux Toolkit | 11 |
+| 7 | Events | 17 | 20 | Zustand | 8 |
+| 8 | useState | 25 | 21 | TypeScript | 11 |
+| 9 | Forms | 17 | 22 | Testing | 10 |
+| 10 | Component Communication | 9 | 23 | Performance | 11 |
+| 11 | useEffect | 11 | 24 | Accessibility | 10 |
+| 12 | API | 17 | 25 | Real-World Components | 13 |
 | 13 | useRef | 8 | | | |
 
-By difficulty: **103 Beginner, 103 Easy, 71 Medium, 25 Hard**. By kind: 267 build, 17 debug
-(fix real buggy code), 7 optimize, 4 refactor, 7 test-writing. Collections (Beginner 100,
+By difficulty: **103 Beginner, 103 Easy, 92 Medium, 34 Hard**. By kind: 291 build, 17 debug
+(fix real buggy code), 9 optimize, 5 refactor, 10 test-writing. Collections (Beginner 100,
 Components 100, Hooks 100, API 50, Debugging 50) are assigned automatically.
 
 Some problem types grade more than behaviour:
@@ -169,14 +173,30 @@ unless:
 - it has 2–4 hints, at least one public and one hidden test, requirements, and an explanation
 - slugs and titles are unique
 
-It also writes `preview-props.generated.json`, which the seed uses for the preview. All 302
-problems pass (about 2.5 minutes at concurrency 6).
+It also writes `preview-props.generated.json`, which the seed uses for the preview. All 332
+problems pass (about 2.5 minutes; each problem's runs go in parallel, so the default is 3
+problems at a time to keep memory use down — override with `--concurrency=N`).
+
+The same checks live in `src/problem-bank/verify.ts` and are reused by the admin API.
+
+## Authoring in the admin UI
+
+Admin accounts (seeded: `admin@reactcode.dev` / `admin12345`) get an **Admin** link:
+
+- The list shows every problem. Problems defined in code are read-only there — **Duplicate**
+  one to start an editable copy. Problems authored in the UI can be edited and deleted.
+- The editor covers every field: metadata, Markdown description (with preview), starter and
+  solution code, tests (with a hidden toggle), mock API routes as JSON, and wrong solutions.
+- **Verify** runs the full quality check without saving. **Save** runs it too and refuses to
+  store a problem that fails, listing the reasons.
+- Authored problems are numbered after the code-defined bank. `prisma db seed` never touches
+  them, and refuses to run if a bank slug collides with an authored one.
 
 ## Not built yet
 
-- The full 550+ target from the expansion spec: this is the first pass at every level, so
-  the advanced levels (16–25) have 5–10 problems each and can take many more
+- The full 550+ target from the expansion spec: levels 16–25 now have 8–13 problems each
+  and can take many more
 - Multi-file problems (file tree, read-only files)
-- Admin UI, submission history UI, daily challenge, interview mode, streaks
+- Daily challenge, interview mode, streaks
 - Hardened (container) execution
 - Automated tests for the platform itself (the problem verifier covers the engine end to end)

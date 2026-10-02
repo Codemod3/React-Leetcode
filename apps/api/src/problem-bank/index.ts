@@ -24,6 +24,12 @@ import { testing } from "./22-testing.js";
 import { performance } from "./23-performance.js";
 import { accessibility } from "./24-accessibility.js";
 import { realWorld } from "./25-real-world.js";
+import { contextMore, reduxMore, routerMore, useReducerMore, zustandMore } from "./more-16-20.js";
+import { accessibilityMore, performanceMore, realWorldMore, testingMore, typescriptMore } from "./more-21-25.js";
+import type { ProblemDef } from "./types.js";
+
+/** Appends extra problems (written in a later batch) to a level, after its original ones. */
+const withMore = (bank: CategoryBank, more: ProblemDef[]): CategoryBank => ({ ...bank, problems: [...bank.problems, ...more] });
 
 /** Categories in learning order. A problem's global number is its position in this list. */
 export const categoryBanks: CategoryBank[] = [
@@ -42,16 +48,16 @@ export const categoryBanks: CategoryBank[] = [
   useRefBank,
   customHooks,
   debugging,
-  router,
-  context,
-  useReducerBank,
-  redux,
-  zustand,
-  typescript,
-  testing,
-  performance,
-  accessibility,
-  realWorld,
+  withMore(router, routerMore),
+  withMore(context, contextMore),
+  withMore(useReducerBank, useReducerMore),
+  withMore(redux, reduxMore),
+  withMore(zustand, zustandMore),
+  withMore(typescript, typescriptMore),
+  withMore(testing, testingMore),
+  withMore(performance, performanceMore),
+  withMore(accessibility, accessibilityMore),
+  withMore(realWorld, realWorldMore),
 ];
 
 const COMPONENT_CATEGORIES = new Set(["JSX", "Components", "Props", "Children"]);

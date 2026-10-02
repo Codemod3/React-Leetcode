@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Code2, History, LayoutDashboard, ListChecks, LogOut } from "lucide-react";
+import { Code2, History, LayoutDashboard, ListChecks, LogOut, Wrench } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useLogout } from "../hooks/useAuth";
 
@@ -47,6 +47,13 @@ export function Layout() {
                 <LayoutDashboard className="w-4 h-4" /> Dashboard
               </span>
             </NavItem>
+            {user?.role === "ADMIN" && (
+              <NavItem to="/admin">
+                <span className="flex items-center gap-1.5">
+                  <Wrench className="w-4 h-4" /> Admin
+                </span>
+              </NavItem>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-3">

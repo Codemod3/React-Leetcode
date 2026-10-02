@@ -1,19 +1,19 @@
 import { hidden, test, type CategoryBank } from "./types.js";
 
 const click = (name: string) => `fireEvent.click(screen.getByRole("button", { name: ${JSON.stringify(name)} }));`;
-const clean = `const errors = typeCheck();\nassert(errors.length === 0, "TypeScript errors:\\n" + errors.join("\\n"));`;
+export const clean = `const errors = typeCheck();\nassert(errors.length === 0, "TypeScript errors:\\n" + errors.join("\\n"));`;
 /** Each snippet is appended to the learner's file on its own; it must produce a type error. */
-const mustReject = (snippets: string[]) =>
+export const mustReject = (snippets: string[]) =>
   snippets
     .map(
       (s) =>
         `assert(typeCheck(${JSON.stringify(s)}).length > 0, ${JSON.stringify(`Your types should reject: ${s}`)});`
     )
     .join("\n");
-const mustAccept = (snippet: string) =>
+export const mustAccept = (snippet: string) =>
   `{ const e = typeCheck(${JSON.stringify(snippet)}); assert(e.length === 0, ${JSON.stringify(`Your types should accept: ${snippet}`)} + "\\n" + e.join("\\n")); }`;
 
-const STRICT_NOTE = "\n\nThe tests type-check your file with `strict: true` and also check that misuse is **rejected**, so `any` won't pass.";
+export const STRICT_NOTE = "\n\nThe tests type-check your file with `strict: true` and also check that misuse is **rejected**, so `any` won't pass.";
 
 export const typescript: CategoryBank = {
   category: "TypeScript",
