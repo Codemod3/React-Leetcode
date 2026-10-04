@@ -3,7 +3,7 @@
 // DATABASE_URL at a real instance, and run `prisma migrate dev` again —
 // nothing else in this schema or the application code needs to change.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

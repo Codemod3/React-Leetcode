@@ -2,10 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+}
+
 body {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #eff2f6;
+  min-height: 100vh;
+}
+
+/* Custom sleek dark scrollbar matching LeetCode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3e3e3e;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
 }
 
 .monaco-editor-container {
   height: 100%;
 }
+
+/* Prevent text selection and cursor jitter while dragging resizers */
+.resizing-active {
+  user-select: none !important;
+  cursor: col-resize !important;
+}
+
+.resizing-active-vertical {
+  user-select: none !important;
+  cursor: row-resize !important;
+}
+

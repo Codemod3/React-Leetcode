@@ -314,7 +314,7 @@ function ProblemEditor({ id, duplicate }: { id?: string; duplicate: boolean }) {
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-300">Description (Markdown)</span>
-            <button type="button" className="text-xs text-brand-500 hover:underline" onClick={() => setPreviewDescription((p) => !p)}>
+            <button type="button" className="text-xs text-[#ffa116] hover:underline" onClick={() => setPreviewDescription((p) => !p)}>
               {previewDescription ? "Edit" : "Preview"}
             </button>
           </div>
@@ -387,7 +387,7 @@ function ProblemEditor({ id, duplicate }: { id?: string; duplicate: boolean }) {
         ))}
         <button
           type="button"
-          className="flex items-center gap-1 text-sm text-brand-500 hover:underline"
+          className="flex items-center gap-1 text-xs text-[#ffa116] hover:underline"
           onClick={() => set("tests", [...form.tests, { name: "", code: "renderComponent();\n", hidden: true }])}
         >
           <Plus className="w-4 h-4" /> Add test
@@ -421,14 +421,14 @@ function ProblemEditor({ id, duplicate }: { id?: string; duplicate: boolean }) {
         ))}
         <button
           type="button"
-          className="flex items-center gap-1 text-sm text-brand-500 hover:underline"
+          className="flex items-center gap-1 text-xs text-[#ffa116] hover:underline"
           onClick={() => set("wrongSolutions", [...form.wrongSolutions, form.starterCode])}
         >
           <Plus className="w-4 h-4" /> Add wrong solution
         </button>
       </Section>
 
-      <div className="sticky bottom-0 bg-slate-950 shadow-[0_-8px_16px_rgba(2,6,23,0.9)] border-t border-slate-800 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 space-y-3">
+      <div className="sticky bottom-0 bg-[#1a1a1a] shadow-[0_-8px_16px_rgba(0,0,0,0.8)] border-t border-[#333333] -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 space-y-3">
         {(problemErrors.length > 0 || report) && (
           <div role="status" className="text-sm space-y-1 max-h-48 overflow-auto">
             {report?.ok && (
@@ -456,7 +456,7 @@ function ProblemEditor({ id, duplicate }: { id?: string; duplicate: boolean }) {
               const input = collect();
               if (input) verify.mutate(input);
             }}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-[#262626] hover:bg-[#333] text-white border border-[#383838] disabled:opacity-50"
           >
             <ShieldCheck className="w-4 h-4" /> {verify.isPending ? "Verifying..." : "Verify"}
           </button>
@@ -467,7 +467,7 @@ function ProblemEditor({ id, duplicate }: { id?: string; duplicate: boolean }) {
               const input = collect();
               if (input) save.mutate(input);
             }}
-            className="text-sm px-3 py-1.5 rounded bg-brand-600 hover:bg-brand-500 text-white disabled:opacity-50"
+            className="text-xs px-3.5 py-1.5 rounded-md bg-[#ffa116] hover:bg-[#ea8e08] text-[#1a1a1a] font-bold disabled:opacity-50 transition-colors"
           >
             {save.isPending ? "Verifying and saving..." : editingId ? "Save changes" : "Create problem"}
           </button>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { AlertCircle, Monitor, RotateCcw, Terminal } from "lucide-react";
 import type { MockRoute } from "@reactcode/shared";
 import { compilePreviewComponent, deserializePreviewProps, PreviewErrorBoundary } from "../lib/livePreview";
 
@@ -8,11 +9,10 @@ interface LivePreviewProps {
   version: number;
   mockApi: MockRoute[] | null;
   previewProps: unknown;
-  /** Why there's nothing to render (custom hook, a test-writing problem...), if so. */
   noPreviewReason: string | null;
 }
 
-const MAX_LOG = 5;
+const MAX_LOG = 6;
 
 function describeArg(arg: unknown): string {
   if (arg && typeof arg === "object" && "nativeEvent" in arg) return `<${(arg as { type?: string }).type ?? ""} event>`;
@@ -26,9 +26,9 @@ function describeArg(arg: unknown): string {
 export function LivePreview({ code, version, mockApi, previewProps, noPreviewReason }: LivePreviewProps) {
   const [renderError, setRenderError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [manualReload, setManualReload] = useState(0);
   const mountRef = useRef<HTMLDivElement>(null);
 
-  // Recompile only when the learner presses Run (version changes), not on every keystroke.
   const compiled = useMemo(() => {
     if (noPreviewReason) return null;
     try {
@@ -43,18 +43,14 @@ export function LivePreview({ code, version, mockApi, previewProps, noPreviewRea
       return { Component: null, props: {}, error: err instanceof Error ? err.message : String(err) };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version]);
+  }, [version, manualReload]);
 
-  // The learner's component renders in its own React root, so it doesn't inherit
-  // ReactCode's router, query client, or any other context from the host page.
   useEffect(() => {
     setRenderError(null);
     setLog([]);
     const container = mountRef.current;
     if (!container || !compiled?.Component) return;
     const { Component, props } = compiled;
-    // A fresh host element per root: StrictMode runs this effect twice, and two roots
-    // must never share a container while the first one's deferred unmount is pending.
     const host = document.createElement("div");
     container.appendChild(host);
     const root: Root = createRoot(host);
@@ -63,7 +59,6 @@ export function LivePreview({ code, version, mockApi, previewProps, noPreviewRea
         <Component {...props} />
       </PreviewErrorBoundary>
     );
-    // Deferred so React isn't asked to unmount a root while it's still rendering.
     return () => {
       setTimeout(() => {
         root.unmount();
@@ -75,24 +70,56 @@ export function LivePreview({ code, version, mockApi, previewProps, noPreviewRea
   const error = compiled?.error ?? renderError;
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      <div className="px-3 py-1.5 text-xs font-medium text-slate-400 border-b border-slate-800 bg-slate-900">Preview</div>
-      <div className="flex-1 overflow-auto p-4 bg-white text-slate-900" data-testid="preview">
+    <div className="h-full flex flex-col min-h-0 bg-[#262626] border-l border-[#333333]">
+      {/* LeetCode styled pane header */}
+      <div className="h-9 px-3 flex items-center justify-between border-b border-[#333333] bg-[#282828] text-xs shrink-0 select-none">
+        <div className="flex items-center gap-1.5 text-white font-medium">
+          <Monitor className="w-3.5 h-3.5 text-[#ffa116]" />
+          <span>Live Preview</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setManualReload((v) => v + 1)}
+            title="Reload Preview"
+            className="p-1 rounded text-[#8c8c8c] hover:text-white hover:bg-[#333333] transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Preview Canvas */}
+      <div className="flex-1 overflow-auto p-4 bg-[#ffffff] text-[#111827] relative" data-testid="preview">
         {noPreviewReason ? (
-          <p className="text-xs text-slate-500">{noPreviewReason}</p>
+          <div className="h-full flex items-center justify-center p-6 text-center text-[#6b7280] text-xs">
+            {noPreviewReason}
+          </div>
+        ) : error ? (
+          <div className="bg-[#fef2f2] border border-[#fecaca] rounded-lg p-3 text-xs text-[#991b1b] font-mono whitespace-pre-wrap flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#ef4444] mt-0.5" />
+            <div>
+              <p className="font-semibold mb-1">Preview Error</p>
+              {error}
+            </div>
+          </div>
         ) : (
-          <>
-            {error && <pre className="text-red-600 text-xs whitespace-pre-wrap font-mono">{error}</pre>}
-            <div ref={mountRef} hidden={!!error} />
-          </>
+          <div ref={mountRef} className="w-full h-full" />
         )}
       </div>
+
+      {/* LeetCode styled Preview Console / Event log */}
       {log.length > 0 && (
-        <div className="border-t border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-mono text-slate-400" aria-live="polite">
-          <span className="text-slate-500">Preview log: </span>
-          {log.map((entry, i) => (
-            <div key={i}>{entry}</div>
-          ))}
+        <div className="border-t border-[#333333] bg-[#1e1e1e] p-2 text-xs font-mono text-[#9ca3af] max-h-32 overflow-auto shrink-0">
+          <div className="flex items-center gap-1 text-[11px] text-[#ffa116] font-semibold mb-1">
+            <Terminal className="w-3 h-3" /> Preview Log:
+          </div>
+          <div className="space-y-0.5 text-[11px]">
+            {log.map((entry, i) => (
+              <div key={i} className="text-[#eff2f6] truncate font-mono">
+                {entry}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

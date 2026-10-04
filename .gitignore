@@ -7,3 +7,4 @@ apps/api/prisma/dev.db
 apps/api/prisma/dev.db-journal
 apps/api/tmp-exec/
 .DS_Store
+*.tsbuildinfo
