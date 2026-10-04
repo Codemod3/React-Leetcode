@@ -239,7 +239,11 @@ function Workspace({ slug }: { slug: string }) {
   const pending = runMutation.isPending || submitMutation.isPending;
 
   return (
-    <div className="h-[calc(100vh-50px)] flex flex-col bg-[#1a1a1a] overflow-hidden select-none">
+    <div
+      className={`h-[calc(100vh-50px)] flex flex-col bg-[#1a1a1a] overflow-hidden ${
+        leftSplit.isDragging || verticalSplit.isDragging || editorSplit.isDragging ? "select-none" : ""
+      }`}
+    >
       {/* 1. Authentic LeetCode Top Action Bar */}
       <div className="h-11 px-3 border-b border-[#333333] bg-[#282828] flex items-center justify-between shrink-0 text-xs">
         {/* Left: Problem Navigator */}
@@ -414,7 +418,7 @@ function Workspace({ slug }: { slug: string }) {
           </div>
 
           {/* Left Tab Body */}
-          <div className="flex-1 overflow-auto p-5 text-sm space-y-6 text-[#eff2f6]">
+          <div className="flex-1 overflow-auto p-5 text-sm space-y-6 text-[#eff2f6] select-text">
             {activeLeftTab === "description" && (
               <>
                 {/* Title & Solved Status */}

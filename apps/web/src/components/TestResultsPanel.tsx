@@ -60,7 +60,7 @@ export function TestResultsPanel({ result, pending, publicTests = [] }: TestResu
       </div>
 
       {/* Panel Body */}
-      <div className="flex-1 overflow-auto p-4 min-h-0">
+      <div className="flex-1 overflow-auto p-4 min-h-0 select-text">
         {pending ? (
           <div className="h-full flex flex-col items-center justify-center text-sm text-[#8c8c8c] gap-2">
             <Clock className="w-5 h-5 animate-spin text-[#ffa116]" />
